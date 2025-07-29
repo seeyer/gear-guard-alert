@@ -10,27 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CalendarDays, Clock, Plus, Wrench, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-
-interface MaintenanceTask {
-  id: string;
-  equipmentId: string;
-  equipmentName: string;
-  type: 'routine' | 'preventive' | 'emergency' | 'inspection';
-  title: string;
-  description: string;
-  scheduledDate: Date;
-  estimatedHours: number;
-  assignedTo: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'scheduled' | 'in-progress' | 'completed' | 'overdue';
-  parts?: string[];
-  cost?: number;
-}
-
-interface MaintenanceSchedulerProps {
-  equipment: any[];
-  onScheduleTask: (task: MaintenanceTask) => void;
-}
+import { Equipment, MaintenanceTask, MaintenanceSchedulerProps } from "@/types/equipment";
 
 export const MaintenanceScheduler = ({ equipment, onScheduleTask }: MaintenanceSchedulerProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());

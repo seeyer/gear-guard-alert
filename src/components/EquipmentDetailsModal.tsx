@@ -8,32 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarDays, MapPin, Wrench, AlertTriangle, FileText, Clock, QrCode, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface Equipment {
-  id: string;
-  name: string;
-  model: string;
-  serialNumber: string;
-  location: string;
-  status: 'operational' | 'maintenance' | 'critical' | 'offline';
-  lastMaintenance: string;
-  nextMaintenance: string;
-  hoursOperated: number;
-  image?: string;
-  category?: string;
-  manufacturer?: string;
-  purchaseDate?: string;
-  warrantyExpiry?: string;
-  specifications?: Record<string, string>;
-}
-
-interface EquipmentDetailsModalProps {
-  equipment: Equipment | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onUpdate: (equipment: Equipment) => void;
-  onSendAlert: (equipment: Equipment, message: string) => void;
-}
+import { Equipment, EquipmentDetailsModalProps } from "@/types/equipment";
 
 const statusConfig = {
   operational: { label: 'Operational', className: 'bg-status-operational text-primary-foreground' },

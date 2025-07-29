@@ -21,10 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Camera, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface AddEquipmentDialogProps {
-  onAdd: (equipment: any) => void;
-}
+import { AddEquipmentDialogProps } from "@/types/equipment";
 
 export const AddEquipmentDialog = ({ onAdd }: AddEquipmentDialogProps) => {
   const [open, setOpen] = useState(false);

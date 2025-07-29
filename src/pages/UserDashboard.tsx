@@ -12,9 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, Download, AlertTriangle, Calendar, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Equipment } from "@/types/equipment";
 
 // Enhanced equipment data with demo images
-const initialEquipment = [
+const initialEquipment: Equipment[] = [
   {
     id: "1",
     name: "Excavator CAT 320",

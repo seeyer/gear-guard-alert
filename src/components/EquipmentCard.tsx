@@ -2,23 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, MapPin, Wrench, AlertTriangle } from "lucide-react";
-
-interface Equipment {
-  id: string;
-  name: string;
-  model: string;
-  serialNumber: string;
-  location: string;
-  status: 'operational' | 'maintenance' | 'critical' | 'offline';
-  lastMaintenance: string;
-  nextMaintenance: string;
-  hoursOperated: number;
-}
-
-interface EquipmentCardProps {
-  equipment: Equipment;
-  onEdit: (equipment: Equipment) => void;
-}
+import { Equipment, EquipmentCardProps, StatusConfig } from "@/types/equipment";
 
 const statusConfig = {
   operational: {

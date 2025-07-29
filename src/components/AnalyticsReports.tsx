@@ -30,9 +30,10 @@ import {
   FileSpreadsheet,
   AlertTriangle
 } from "lucide-react";
+import { Equipment } from "@/types/equipment";
 
 interface AnalyticsReportsProps {
-  equipment: any[];
+  equipment: Equipment[];
 }
 
 export const AnalyticsReports = ({ equipment }: AnalyticsReportsProps) => {

@@ -4,25 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Mail, AlertTriangle, Wrench, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface Notification {
-  id: string;
-  type: 'maintenance' | 'critical' | 'alert' | 'info';
-  title: string;
-  message: string;
-  equipmentId: string;
-  timestamp: Date;
-  read: boolean;
-  emailSent: boolean;
-}
-
-interface NotificationSystemProps {
-  equipment: any[];
-  onSendEmail: (notification: Notification) => void;
-}
+import { Equipment, NotificationData, NotificationSystemProps } from "@/types/equipment";
 
 export const NotificationSystem = ({ equipment, onSendEmail }: NotificationSystemProps) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { toast } = useToast();
 
@@ -30,7 +15,7 @@ export const NotificationSystem = ({ equipment, onSendEmail }: NotificationSyste
   useEffect(() => {
     const checkMaintenanceAlerts = () => {
       const today = new Date();
-      const alerts: Notification[] = [];
+      const alerts: NotificationData[] = [];
 
       equipment.forEach(item => {
         const nextMaintenance = new Date(item.nextMaintenance);
@@ -105,7 +90,7 @@ export const NotificationSystem = ({ equipment, onSendEmail }: NotificationSyste
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  const sendEmailAlert = async (notification: Notification) => {
+  const sendEmailAlert = async (notification: NotificationData) => {
     // Simulate email sending
     const recipients = {
       admin: 'admin@company.com',
@@ -261,7 +246,7 @@ export const NotificationSystem = ({ equipment, onSendEmail }: NotificationSyste
 
 // Email service simulation
 export const EmailService = {
-  sendMaintenanceAlert: async (equipment: any, message: string) => {
+  sendMaintenanceAlert: async (equipment: Equipment, message: string) => {
     // Simulate email sending delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -286,7 +271,7 @@ export const EmailService = {
     return emailData;
   },
 
-  sendCriticalAlert: async (equipment: any) => {
+  sendCriticalAlert: async (equipment: Equipment) => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const emailData = {
