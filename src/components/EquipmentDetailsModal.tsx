@@ -181,14 +181,22 @@ export const EquipmentDetailsModal = ({
                 </CardHeader>
                 <CardContent>
                   {currentEquipment.image ? (
-                    <img
-                      src={currentEquipment.image}
-                      alt={currentEquipment.name}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
+                    <div className="space-y-3">
+                      <img
+                        src={currentEquipment.image}
+                        alt={currentEquipment.name}
+                        className="w-full h-64 object-cover rounded-lg shadow-lg"
+                      />
+                      <div className="text-sm text-muted-foreground">
+                        Equipment Photo - {currentEquipment.name}
+                      </div>
+                    </div>
                   ) : (
                     <div className="w-full h-48 bg-muted rounded-lg flex items-center justify-center">
-                      <Camera className="w-12 h-12 text-muted-foreground" />
+                      <div className="text-center">
+                        <Camera className="w-12 h-12 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-muted-foreground">No image available</p>
+                      </div>
                     </div>
                   )}
                 </CardContent>

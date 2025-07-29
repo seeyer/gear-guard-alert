@@ -13,7 +13,7 @@ import { Bell, Download, AlertTriangle, Calendar, BarChart3 } from "lucide-react
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
-// Enhanced equipment data with more realistic information
+// Enhanced equipment data with demo images
 const initialEquipment = [
   {
     id: "1",
@@ -25,6 +25,17 @@ const initialEquipment = [
     lastMaintenance: "2024-01-15",
     nextMaintenance: "2024-04-15",
     hoursOperated: 1250,
+    image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&h=600&fit=crop",
+    category: "Excavator",
+    manufacturer: "Caterpillar",
+    purchaseDate: "2022-03-15",
+    warrantyExpiry: "2025-03-15",
+    specifications: {
+      "Engine": "CAT C7.1 ACERT",
+      "Operating Weight": "20,300 kg",
+      "Bucket Capacity": "1.2 m³",
+      "Max Digging Depth": "6.6 m"
+    }
   },
   {
     id: "2",
@@ -36,6 +47,17 @@ const initialEquipment = [
     lastMaintenance: "2024-02-01",
     nextMaintenance: "2024-03-01",
     hoursOperated: 2100,
+    image: "https://images.unsplash.com/photo-1572041929851-ce2583a18dd6?w=800&h=600&fit=crop",
+    category: "Bulldozer",
+    manufacturer: "Komatsu",
+    purchaseDate: "2021-08-20",
+    warrantyExpiry: "2024-08-20",
+    specifications: {
+      "Engine": "Komatsu SAA6D114E-3",
+      "Operating Weight": "17,400 kg",
+      "Blade Capacity": "3.9 m³",
+      "Ground Pressure": "0.067 MPa"
+    }
   },
   {
     id: "3",
@@ -47,6 +69,17 @@ const initialEquipment = [
     lastMaintenance: "2023-12-10",
     nextMaintenance: "2024-02-10",
     hoursOperated: 3200,
+    image: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=800&h=600&fit=crop",
+    category: "Crane",
+    manufacturer: "Liebherr",
+    purchaseDate: "2020-05-10",
+    warrantyExpiry: "2023-05-10",
+    specifications: {
+      "Max Lifting Capacity": "60 tons",
+      "Boom Length": "48 m",
+      "Engine": "Liebherr D936L A7",
+      "Drive": "8x6x8"
+    }
   },
   {
     id: "4",
@@ -58,6 +91,17 @@ const initialEquipment = [
     lastMaintenance: "2024-02-20",
     nextMaintenance: "2024-05-20",
     hoursOperated: 980,
+    image: "https://images.unsplash.com/photo-1581093458791-9d42e72c4b6d?w=800&h=600&fit=crop",
+    category: "Loader",
+    manufacturer: "Volvo",
+    purchaseDate: "2023-01-12",
+    warrantyExpiry: "2026-01-12",
+    specifications: {
+      "Engine": "Volvo D8J",
+      "Operating Weight": "16,200 kg",
+      "Bucket Capacity": "4.2 m³",
+      "Breakout Force": "175 kN"
+    }
   },
   {
     id: "5",
@@ -69,6 +113,17 @@ const initialEquipment = [
     lastMaintenance: "2024-01-30",
     nextMaintenance: "2024-04-30",
     hoursOperated: 1800,
+    image: "https://images.unsplash.com/photo-1605962077165-0dac90fb7e68?w=800&h=600&fit=crop",
+    category: "Dump Truck",
+    manufacturer: "Caterpillar",
+    purchaseDate: "2022-09-05",
+    warrantyExpiry: "2025-09-05",
+    specifications: {
+      "Engine": "CAT C27 ACERT",
+      "Payload": "68.1 tons",
+      "Body Capacity": "41.5 m³",
+      "Gross Vehicle Weight": "129,300 kg"
+    }
   },
 ];
 
