@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -18,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Camera, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AddEquipmentDialogProps {
@@ -28,6 +29,8 @@ interface AddEquipmentDialogProps {
 export const AddEquipmentDialog = ({ onAdd }: AddEquipmentDialogProps) => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     model: "",
@@ -35,6 +38,9 @@ export const AddEquipmentDialog = ({ onAdd }: AddEquipmentDialogProps) => {
     location: "",
     status: "operational" as const,
     hoursOperated: 0,
+    category: "",
+    manufacturer: "",
+    image: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
