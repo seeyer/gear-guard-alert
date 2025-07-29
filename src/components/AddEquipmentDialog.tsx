@@ -70,7 +70,11 @@ export const AddEquipmentDialog = ({ onAdd }: AddEquipmentDialogProps) => {
       location: "",
       status: "operational",
       hoursOperated: 0,
+      category: "",
+      manufacturer: "",
+      image: "",
     });
+    setImagePreview(null);
     setOpen(false);
     
     toast({
