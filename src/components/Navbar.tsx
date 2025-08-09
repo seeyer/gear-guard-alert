@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogOut, User, Settings, Wrench } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,39 +12,35 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-interface NavbarProps {
-  onNavigate: (page: 'dashboard' | 'admin') => void;
-  currentPage: string;
-}
-
-export const Navbar = ({ onNavigate, currentPage }: NavbarProps) => {
+export const Navbar = () => {
   const { user, logout } = useAuth();
+  const location = useLocation();
 
   return (
     <nav className="border-b border-border bg-card">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center">
+            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
               <Wrench className="h-6 w-6 text-primary mr-2" />
               <h1 className="text-xl font-bold text-foreground">Machinery Inventory</h1>
-            </div>
+            </Link>
             
             <div className="flex space-x-2">
               <Button
-                variant={currentPage === 'dashboard' ? 'default' : 'ghost'}
+                variant={location.pathname === '/dashboard' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => onNavigate('dashboard')}
+                asChild
               >
-                Dashboard
+                <Link to="/dashboard">Dashboard</Link>
               </Button>
               {user?.role === 'superadmin' && (
                 <Button
-                  variant={currentPage === 'admin' ? 'default' : 'ghost'}
+                  variant={location.pathname === '/admin' ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={() => onNavigate('admin')}
+                  asChild
                 >
-                  Admin Panel
+                  <Link to="/admin">Admin Panel</Link>
                 </Button>
               )}
             </div>

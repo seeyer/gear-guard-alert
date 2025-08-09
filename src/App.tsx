@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,14 +6,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Login } from "@/components/Login";
 import { Navbar } from "@/components/Navbar";
+import Index from "@/pages/Index";
 import { UserDashboard } from "@/pages/UserDashboard";
 import { SuperAdminDashboard } from "@/pages/SuperAdminDashboard";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const AppContent = () => {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'admin'>('dashboard');
 
   if (isLoading) {
     return (
@@ -27,12 +28,54 @@ const AppContent = () => {
     return <Login />;
   }
 
+  return <>{children}</>;
+};
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  
+  if (user?.role !== 'superadmin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+const AppContent = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar onNavigate={setCurrentPage} currentPage={currentPage} />
-      {currentPage === 'dashboard' && <UserDashboard />}
-      {currentPage === 'admin' && user.role === 'superadmin' && <SuperAdminDashboard />}
-    </div>
+    <Router>
+      <Routes>
+        {/* Public route for login */}
+        <Route path="/login" element={<Login />} />
+        
+        {/* Protected routes */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Navbar />
+            <Index />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Navbar />
+            <UserDashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <Navbar />
+              <SuperAdminDashboard />
+            </AdminRoute>
+          </ProtectedRoute>
+        } />
+        
+        {/* 404 page */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
   );
 };
 
