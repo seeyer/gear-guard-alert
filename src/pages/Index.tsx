@@ -7,53 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Settings, Bell, Download } from "lucide-react";
 import heroImage from "@/assets/machinery-hero.jpg";
 
-// Sample equipment data
-const initialEquipment = [
-  {
-    id: "1",
-    name: "Excavator CAT 320",
-    model: "CAT 320GC",
-    serialNumber: "CAT320GC2024001",
-    location: "Site A - Zone 1",
-    status: "operational" as const,
-    lastMaintenance: "2024-01-15",
-    nextMaintenance: "2024-04-15",
-    hoursOperated: 1250,
-  },
-  {
-    id: "2",
-    name: "Bulldozer Komatsu D65",
-    model: "D65PX-18",
-    serialNumber: "KOM65PX2024002",
-    location: "Site B - Zone 2",
-    status: "maintenance" as const,
-    lastMaintenance: "2024-02-01",
-    nextMaintenance: "2024-03-01",
-    hoursOperated: 2100,
-  },
-  {
-    id: "3",
-    name: "Crane Liebherr LTM",
-    model: "LTM 1060-3.1",
-    serialNumber: "LIE1060-2024003",
-    location: "Site C - Main",
-    status: "critical" as const,
-    lastMaintenance: "2023-12-10",
-    nextMaintenance: "2024-02-10",
-    hoursOperated: 3200,
-  },
-  {
-    id: "4",
-    name: "Loader Volvo L90",
-    model: "L90H",
-    serialNumber: "VOL90H-2024004",
-    location: "Site A - Zone 3",
-    status: "operational" as const,
-    lastMaintenance: "2024-02-20",
-    nextMaintenance: "2024-05-20",
-    hoursOperated: 980,
-  },
-];
+// Empty equipment data - cleared demo data
+const initialEquipment: any[] = [];
 
 const Index = () => {
   const [equipment, setEquipment] = useState(initialEquipment);
