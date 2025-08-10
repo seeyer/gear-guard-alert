@@ -95,6 +95,7 @@ export const Login = () => {
               <div className="text-xs space-y-1">
                 <p><strong>User:</strong> user@demo.com / password</p>
                 <p><strong>Admin:</strong> admin@demo.com / admin123</p>
+                <p><strong>Super Admin:</strong> superadmin@demo.com / super123</p>
               </div>
             </div>
           </CardContent>

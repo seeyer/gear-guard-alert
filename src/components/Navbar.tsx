@@ -34,7 +34,7 @@ export const Navbar = () => {
               >
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
-              {user?.role === 'superadmin' && (
+              {(user?.role === 'admin' || user?.role === 'superadmin') && (
                 <Button
                   variant={location.pathname === '/admin' ? 'default' : 'ghost'}
                   size="sm"
@@ -43,12 +43,21 @@ export const Navbar = () => {
                   <Link to="/admin">Admin Panel</Link>
                 </Button>
               )}
+              {user?.role === 'superadmin' && (
+                <Button
+                  variant={location.pathname === '/superadmin' ? 'default' : 'ghost'}
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/superadmin">Super Admin</Link>
+                </Button>
+              )}
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
             <Badge variant="secondary" className="text-xs">
-              {user?.role === 'superadmin' ? 'Super Admin' : 'User'}
+              {user?.role === 'superadmin' ? 'Super Admin' : user?.role === 'admin' ? 'Admin' : 'User'}
             </Badge>
             
             <DropdownMenu>

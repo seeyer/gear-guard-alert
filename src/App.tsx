@@ -8,6 +8,7 @@ import { Login } from "@/components/Login";
 import { Navbar } from "@/components/Navbar";
 import Index from "@/pages/Index";
 import { UserDashboard } from "@/pages/UserDashboard";
+import { AdminDashboard } from "@/pages/AdminDashboard";
 import { SuperAdminDashboard } from "@/pages/SuperAdminDashboard";
 import NotFound from "@/pages/NotFound";
 
@@ -32,6 +33,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  
+  if (user?.role !== 'admin' && user?.role !== 'superadmin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   
   if (user?.role !== 'superadmin') {
@@ -67,8 +78,17 @@ const AppContent = () => {
           <ProtectedRoute>
             <AdminRoute>
               <Navbar />
-              <SuperAdminDashboard />
+              <AdminDashboard />
             </AdminRoute>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/superadmin" element={
+          <ProtectedRoute>
+            <SuperAdminRoute>
+              <Navbar />
+              <SuperAdminDashboard />
+            </SuperAdminRoute>
           </ProtectedRoute>
         } />
         

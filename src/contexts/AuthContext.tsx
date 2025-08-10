@@ -4,7 +4,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'user' | 'superadmin';
+  role: 'user' | 'admin' | 'superadmin';
 }
 
 interface AuthContextType {
@@ -30,6 +30,13 @@ const mockUsers = [
     email: 'admin@demo.com',
     password: 'admin123',
     name: 'Admin User',
+    role: 'admin' as const
+  },
+  {
+    id: '3', 
+    email: 'superadmin@demo.com',
+    password: 'super123',
+    name: 'Super Admin',
     role: 'superadmin' as const
   }
 ];
