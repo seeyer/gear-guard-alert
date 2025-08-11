@@ -5,7 +5,7 @@ import { AddEquipmentDialog } from "@/components/AddEquipmentDialog";
 import { SearchAndFilter } from "@/components/SearchAndFilter";
 import { Button } from "@/components/ui/button";
 import { Settings, Bell, Download } from "lucide-react";
-import heroImage from "@/assets/machinery-hero.jpg";
+
 
 // Empty equipment data - cleared demo data
 const initialEquipment: any[] = [];
@@ -40,12 +40,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="relative h-64 overflow-hidden">
-        <img 
-          src={heroImage} 
-          alt="Heavy Machinery" 
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-64 overflow-hidden bg-gradient-to-r from-primary/20 to-secondary/20">
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-background/40" />
         <div className="absolute inset-0 flex items-center">
           <div className="container mx-auto px-6">

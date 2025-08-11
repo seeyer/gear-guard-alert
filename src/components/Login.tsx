@@ -90,14 +90,6 @@ export const Login = () => {
               </Button>
             </form>
             
-            <div className="mt-6 p-4 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">Demo Credentials:</p>
-              <div className="text-xs space-y-1">
-                <p><strong>User:</strong> user@demo.com / password</p>
-                <p><strong>Admin:</strong> admin@demo.com / admin123</p>
-                <p><strong>Super Admin:</strong> superadmin@demo.com / super123</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

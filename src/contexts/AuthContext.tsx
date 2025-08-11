@@ -16,30 +16,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user data
-const mockUsers = [
-  {
-    id: '1',
-    email: 'user@demo.com',
-    password: 'password',
-    name: 'John Doe',
-    role: 'user' as const
-  },
-  {
-    id: '2', 
-    email: 'admin@demo.com',
-    password: 'admin123',
-    name: 'Admin User',
-    role: 'admin' as const
-  },
-  {
-    id: '3', 
-    email: 'superadmin@demo.com',
-    password: 'super123',
-    name: 'Super Admin',
-    role: 'superadmin' as const
-  }
-];
+// User authentication will be handled by Supabase
+const mockUsers: any[] = [];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);

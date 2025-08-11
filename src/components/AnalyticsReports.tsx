@@ -37,23 +37,10 @@ interface AnalyticsReportsProps {
 }
 
 export const AnalyticsReports = ({ equipment }: AnalyticsReportsProps) => {
-  // Sample data - in real app this would come from backend
-  const maintenanceCostData = [
-    { month: 'Jan', cost: 12000, preventive: 8000, emergency: 4000 },
-    { month: 'Feb', cost: 15000, preventive: 10000, emergency: 5000 },
-    { month: 'Mar', cost: 9000, preventive: 7000, emergency: 2000 },
-    { month: 'Apr', cost: 18000, preventive: 12000, emergency: 6000 },
-    { month: 'May', cost: 14000, preventive: 9000, emergency: 5000 },
-    { month: 'Jun', cost: 16000, preventive: 11000, emergency: 5000 },
-  ];
+  // Real data will come from equipment and maintenance records
+  const maintenanceCostData: any[] = [];
 
-  const equipmentUtilizationData = [
-    { name: 'Excavators', utilization: 85, target: 90 },
-    { name: 'Bulldozers', utilization: 72, target: 80 },
-    { name: 'Cranes', utilization: 78, target: 85 },
-    { name: 'Loaders', utilization: 92, target: 90 },
-    { name: 'Dump Trucks', utilization: 88, target: 85 },
-  ];
+  const equipmentUtilizationData: any[] = [];
 
   const statusDistribution = [
     { name: 'Operational', value: equipment.filter(e => e.status === 'operational').length, color: '#22c55e' },
@@ -62,14 +49,7 @@ export const AnalyticsReports = ({ equipment }: AnalyticsReportsProps) => {
     { name: 'Offline', value: equipment.filter(e => e.status === 'offline').length, color: '#6b7280' },
   ];
 
-  const downtimeData = [
-    { month: 'Jan', hours: 120, cost: 15000 },
-    { month: 'Feb', hours: 95, cost: 12000 },
-    { month: 'Mar', hours: 150, cost: 18000 },
-    { month: 'Apr', hours: 80, cost: 10000 },
-    { month: 'May', hours: 110, cost: 14000 },
-    { month: 'Jun', hours: 75, cost: 9500 },
-  ];
+  const downtimeData: any[] = [];
 
   const exportReport = (type: string) => {
     // Simulate report generation

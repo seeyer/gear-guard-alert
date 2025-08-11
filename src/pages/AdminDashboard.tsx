@@ -15,45 +15,19 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for admin dashboard
+// Admin stats will be calculated from real data
 const adminStats = {
-  assignedEquipment: 45,
-  pendingMaintenance: 12,
-  activeAlerts: 3,
-  completedTasks: 127,
-  teamMembers: 8,
-  monthlyReports: 4,
+  assignedEquipment: 0,
+  pendingMaintenance: 0,
+  activeAlerts: 0,
+  completedTasks: 0,
+  teamMembers: 0,
+  monthlyReports: 0,
 };
 
-const adminAlerts = [
-  {
-    id: 1,
-    equipment: "Excavator CAT 320",
-    type: "Maintenance Due",
-    severity: "medium",
-    timestamp: "2024-01-29 14:30",
-  },
-  {
-    id: 2,
-    equipment: "Crane Liebherr LTM",
-    type: "Inspection Required",
-    severity: "high",
-    timestamp: "2024-01-29 12:15",
-  },
-  {
-    id: 3,
-    equipment: "Dumper Truck CAT 773",
-    type: "Service Reminder",
-    severity: "low",
-    timestamp: "2024-01-29 10:45",
-  },
-];
+const adminAlerts: any[] = [];
 
-const teamMembers = [
-  { id: 1, name: "Mike Johnson", email: "mike@company.com", role: "Technician", status: "Active" },
-  { id: 2, name: "Sarah Wilson", email: "sarah@company.com", role: "Operator", status: "Active" },
-  { id: 3, name: "David Brown", email: "david@company.com", role: "Supervisor", status: "On Leave" },
-];
+const teamMembers: any[] = [];
 
 export const AdminDashboard = () => {
   const [emailSettings, setEmailSettings] = useState({
