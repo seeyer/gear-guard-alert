@@ -30,10 +30,10 @@ import {
   FileSpreadsheet,
   AlertTriangle
 } from "lucide-react";
-import { Equipment } from "@/types/equipment";
+import { LegacyEquipment } from "@/types/equipment";
 
 interface AnalyticsReportsProps {
-  equipment: Equipment[];
+  equipment: LegacyEquipment[];
 }
 
 export const AnalyticsReports = ({ equipment }: AnalyticsReportsProps) => {
@@ -78,7 +78,7 @@ export const AnalyticsReports = ({ equipment }: AnalyticsReportsProps) => {
       operational: equipment.filter(e => e.status === 'operational').length,
       maintenance_due: equipment.filter(e => e.status === 'maintenance').length,
       critical: equipment.filter(e => e.status === 'critical').length,
-      total_hours: equipment.reduce((sum, e) => sum + e.hoursOperated, 0),
+      total_hours: equipment.reduce((sum, e) => sum + (e.hoursOperated || 0), 0),
       generated_at: new Date().toISOString()
     };
 
@@ -218,7 +218,7 @@ export const AnalyticsReports = ({ equipment }: AnalyticsReportsProps) => {
                   </div>
                   <div className="text-center p-4 bg-muted rounded-lg">
                     <p className="text-2xl font-bold">
-                      {equipment.reduce((sum, e) => sum + e.hoursOperated, 0).toLocaleString()}
+                      {equipment.reduce((sum, e) => sum + (e.hoursOperated || 0), 0).toLocaleString()}
                     </p>
                     <p className="text-sm text-muted-foreground">Total Hours</p>
                   </div>

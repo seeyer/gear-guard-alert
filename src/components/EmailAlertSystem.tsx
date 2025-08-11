@@ -52,13 +52,14 @@ interface EmailLog {
 interface Equipment {
   id: string;
   name: string;
-  model: string;
   serial_number: string;
   location: string;
-  next_maintenance: string;
-  last_maintenance: string;
-  hours_operated: number;
+  next_maintenance_date?: string;
   status: string;
+  category: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const EmailAlertSystem = () => {
@@ -89,7 +90,7 @@ export const EmailAlertSystem = () => {
       const { data, error } = await supabase
         .from('assets')
         .select('*')
-        .order('next_maintenance', { ascending: true });
+        .order('next_maintenance_date', { ascending: true });
 
       if (error) throw error;
       setEquipment(data || []);
@@ -107,21 +108,31 @@ export const EmailAlertSystem = () => {
     try {
       const { data, error } = await supabase
         .from('notification_settings')
-        .select('*')
-        .single();
+        .select('*');
 
       if (error && error.code !== 'PGRST116') throw error;
       
-      if (data) {
+      if (data && data.length > 0) {
+        // Parse settings from key-value pairs
+        const settings = data.reduce((acc, item) => {
+          acc[item.setting_key] = item.setting_value;
+          return acc;
+        }, {} as Record<string, string>);
+        
         setAlertSettings({
-          enableAutoAlerts: data.auto_alerts_enabled,
-          daysBeforeDue: data.days_before_due,
-          criticalEquipmentOnly: data.critical_only,
-          sendToAllUsers: data.send_to_all_users
+          enableAutoAlerts: settings.auto_alerts_enabled === 'true',
+          daysBeforeDue: parseInt(settings.days_before_due) || 7,
+          criticalEquipmentOnly: settings.critical_only === 'true',
+          sendToAllUsers: settings.send_to_all_users === 'true'
         });
         
-        if (data.recipients) {
-          setRecipients(data.recipients);
+        // Parse recipients if stored as JSON
+        if (settings.recipients) {
+          try {
+            setRecipients(JSON.parse(settings.recipients));
+          } catch (e) {
+            console.error('Error parsing recipients:', e);
+          }
         }
       }
     } catch (error) {
@@ -144,7 +155,7 @@ export const EmailAlertSystem = () => {
         timestamp: log.sent_at,
         recipient: log.recipient_email,
         subject: `${log.notification_type.replace('_', ' ').toUpperCase()} Alert`,
-        status: log.status as 'sent' | 'failed' | 'pending',
+        status: log.email_status as 'sent' | 'failed' | 'pending',
         equipmentId: log.asset_id,
         notification_type: log.notification_type
       })) || [];
@@ -157,17 +168,22 @@ export const EmailAlertSystem = () => {
 
   const saveNotificationSettings = async () => {
     try {
-      const { error } = await supabase
-        .from('notification_settings')
-        .upsert({
-          auto_alerts_enabled: alertSettings.enableAutoAlerts,
-          days_before_due: alertSettings.daysBeforeDue,
-          critical_only: alertSettings.criticalEquipmentOnly,
-          send_to_all_users: alertSettings.sendToAllUsers,
-          recipients: recipients
-        });
+      // Save settings as key-value pairs
+      const settingsToSave = [
+        { setting_key: 'auto_alerts_enabled', setting_value: alertSettings.enableAutoAlerts.toString() },
+        { setting_key: 'days_before_due', setting_value: alertSettings.daysBeforeDue.toString() },
+        { setting_key: 'critical_only', setting_value: alertSettings.criticalEquipmentOnly.toString() },
+        { setting_key: 'send_to_all_users', setting_value: alertSettings.sendToAllUsers.toString() },
+        { setting_key: 'recipients', setting_value: JSON.stringify(recipients) }
+      ];
 
-      if (error) throw error;
+      for (const setting of settingsToSave) {
+        const { error } = await supabase
+          .from('notification_settings')
+          .upsert(setting, { onConflict: 'setting_key' });
+        
+        if (error) throw error;
+      }
       
       toast({
         title: "Settings Saved",
@@ -190,7 +206,9 @@ export const EmailAlertSystem = () => {
     warningDate.setDate(today.getDate() + alertSettings.daysBeforeDue);
 
     return equipment.filter(item => {
-      const dueDate = new Date(item.next_maintenance);
+      if (!item.next_maintenance_date) return false;
+      
+      const dueDate = new Date(item.next_maintenance_date);
       const isDue = dueDate <= warningDate;
       const isCritical = item.status === 'critical';
       
@@ -379,7 +397,9 @@ export const EmailAlertSystem = () => {
                 ) : (
                   <div className="space-y-3">
                     {dueEquipment.map(item => {
-                      const dueDate = new Date(item.next_maintenance);
+                      if (!item.next_maintenance_date) return null;
+                      
+                      const dueDate = new Date(item.next_maintenance_date);
                       const today = new Date();
                       const isOverdue = dueDate < today;
                       const daysDiff = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -393,7 +413,7 @@ export const EmailAlertSystem = () => {
                           <div>
                             <h4 className="font-medium">{item.name}</h4>
                             <p className="text-sm text-muted-foreground">
-                              Due: {item.next_maintenance}
+                              Due: {item.next_maintenance_date}
                               {isOverdue && <span className="text-destructive font-bold ml-2">(OVERDUE)</span>}
                               {!isOverdue && daysDiff <= 2 && <span className="text-orange-500 font-bold ml-2">(URGENT)</span>}
                             </p>

@@ -13,10 +13,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, Download, AlertTriangle, Calendar, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Equipment } from "@/types/equipment";
+import { LegacyEquipment } from "@/types/equipment";
 
 // Empty equipment data - cleared demo data
-const initialEquipment: Equipment[] = [];
+const initialEquipment: LegacyEquipment[] = [];
 
 export const UserDashboard = () => {
   const [equipment, setEquipment] = useState(initialEquipment);
@@ -225,7 +225,7 @@ export const UserDashboard = () => {
           </TabsContent>
 
           <TabsContent value="alerts">
-            <EmailAlertSystem equipment={equipment} />
+            <EmailAlertSystem />
           </TabsContent>
 
           <TabsContent value="analytics">

@@ -256,7 +256,7 @@ export const EmailService = {
       body: `
         Equipment: ${equipment.name}
         Model: ${equipment.model}
-        Serial: ${equipment.serialNumber}
+        Serial: ${(equipment as any).serial_number || (equipment as any).serialNumber}
         Location: ${equipment.location}
         Status: ${equipment.status}
         
@@ -282,7 +282,7 @@ export const EmailService = {
         
         Equipment: ${equipment.name}
         Model: ${equipment.model}
-        Serial: ${equipment.serialNumber}
+        Serial: ${(equipment as any).serial_number || (equipment as any).serialNumber}
         Location: ${equipment.location}
         Status: CRITICAL
         

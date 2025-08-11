@@ -1,5 +1,25 @@
-// Enhanced Equipment Interface with proper typing
+// Equipment Interface matching database schema
 export interface Equipment {
+  id: string;
+  name: string;
+  model?: string;
+  serial_number: string;
+  location: string;
+  status: 'available' | 'maintenance' | 'critical' | 'checked_out';
+  next_maintenance_date?: string;
+  category: string;
+  description?: string;
+  purchase_date?: string;
+  purchase_price?: number;
+  warranty_expiry?: string;
+  assigned_to_id?: string;
+  assigned_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Legacy Equipment Interface for components that use old naming
+export interface LegacyEquipment {
   id: string;
   name: string;
   model: string;
@@ -80,32 +100,32 @@ export interface User {
 
 // Props Interfaces
 export interface EquipmentCardProps {
-  equipment: Equipment;
-  onEdit: (equipment: Equipment) => void;
+  equipment: LegacyEquipment;
+  onEdit: (equipment: LegacyEquipment) => void;
 }
 
 export interface AddEquipmentDialogProps {
-  onAdd: (equipment: Equipment) => void;
+  onAdd: (equipment: LegacyEquipment) => void;
 }
 
 export interface MaintenanceSchedulerProps {
-  equipment: Equipment[];
+  equipment: LegacyEquipment[];
   onScheduleTask: (task: MaintenanceTask) => void;
 }
 
 export interface NotificationSystemProps {
-  equipment: Equipment[];
+  equipment: LegacyEquipment[];
   onSendEmail: (notification: NotificationData) => void;
 }
 
 export interface AnalyticsReportsProps {
-  equipment: Equipment[];
+  equipment: LegacyEquipment[];
 }
 
 export interface EquipmentDetailsModalProps {
-  equipment: Equipment | null;
+  equipment: LegacyEquipment | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (equipment: Equipment) => void;
-  onSendAlert: (equipment: Equipment, message: string) => void;
+  onUpdate: (equipment: LegacyEquipment) => void;
+  onSendAlert: (equipment: LegacyEquipment, message: string) => void;
 }

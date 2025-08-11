@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarDays, MapPin, Wrench, AlertTriangle, FileText, Clock, QrCode, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Equipment, EquipmentDetailsModalProps } from "@/types/equipment";
+import { LegacyEquipment, EquipmentDetailsModalProps } from "@/types/equipment";
 
 const statusConfig = {
   operational: { label: 'Operational', className: 'bg-status-operational text-primary-foreground' },
@@ -25,7 +25,7 @@ export const EquipmentDetailsModal = ({
   onSendAlert 
 }: EquipmentDetailsModalProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedEquipment, setEditedEquipment] = useState<Equipment | null>(null);
+  const [editedEquipment, setEditedEquipment] = useState<LegacyEquipment | null>(null);
   const [workOrderNote, setWorkOrderNote] = useState("");
   const { toast } = useToast();
 
