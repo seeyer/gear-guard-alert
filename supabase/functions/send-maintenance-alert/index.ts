@@ -29,6 +29,42 @@ interface Equipment {
   status: string;
 }
 
+// Email rate limiter with exponential backoff
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const sendEmailWithRetry = async (
+  emailData: any, 
+  maxRetries = 3, 
+  baseDelay = 1000
+): Promise<{ success: boolean; data?: any; error?: string }> => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await resend.emails.send(emailData);
+      return { success: true, data: response.data };
+    } catch (error: any) {
+      console.error(`Email attempt ${attempt + 1} failed:`, error.message);
+      
+      // Check if it's a rate limit or threshold error
+      const isRateLimit = error.message?.toLowerCase().includes('rate limit') || 
+                         error.message?.toLowerCase().includes('threshold') ||
+                         error.message?.toLowerCase().includes('quota') ||
+                         error.status === 429;
+      
+      if (isRateLimit && attempt < maxRetries - 1) {
+        const delayTime = baseDelay * Math.pow(2, attempt); // Exponential backoff
+        console.log(`Rate limit hit, waiting ${delayTime}ms before retry ${attempt + 1}...`);
+        await delay(delayTime);
+        continue;
+      }
+      
+      // If it's the last attempt or not a rate limit error, return the error
+      return { success: false, error: error.message };
+    }
+  }
+  
+  return { success: false, error: "Max retries exceeded" };
+};
+
 const getEmailTemplate = (alertType: string, equipment: Equipment, customMessage?: string) => {
   const templates = {
     maintenance_due: {
@@ -60,37 +96,44 @@ const getEmailTemplate = (alertType: string, equipment: Equipment, customMessage
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold;">Next Maintenance:</td>
-                  <td style="padding: 8px 0; color: #dc3545; font-weight: bold;">${equipment.next_maintenance}</td>
+                  <td style="padding: 8px 0; color: #007bff; font-weight: bold;">${equipment.next_maintenance}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Operating Hours:</td>
-                  <td style="padding: 8px 0;">${equipment.hours_operated}</td>
+                  <td style="padding: 8px 0; font-weight: bold;">Current Status:</td>
+                  <td style="padding: 8px 0;">${equipment.status}</td>
                 </tr>
               </table>
-              
-              ${customMessage ? `<div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;"><strong>Additional Message:</strong><br>${customMessage}</div>` : ''}
-              
-              <p style="margin-top: 20px; color: #666;">
-                Please schedule maintenance as soon as possible to ensure optimal performance and safety.
-              </p>
             </div>
             
+            ${customMessage ? `
+              <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ffc107;">
+                <h4 style="color: #856404; margin-top: 0;">Additional Message:</h4>
+                <p style="color: #856404; margin-bottom: 0;">${customMessage}</p>
+              </div>
+            ` : ''}
+            
             <div style="margin-top: 20px; text-align: center; color: #666; font-size: 12px;">
-              <p>This is an automated notification from Machinery Management System</p>
+              <p>This is an automated notification from your Machinery Management System</p>
             </div>
           </div>
         </div>
       `
     },
     overdue: {
-      subject: `🚨 URGENT: Overdue Maintenance - ${equipment.name}`,
+      subject: `🚨 OVERDUE Maintenance - ${equipment.name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #fff5f5; padding: 20px; border-radius: 8px; border: 2px solid #dc3545;">
-            <h2 style="color: #dc3545; margin-bottom: 20px;">🚨 URGENT: Maintenance Overdue</h2>
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <h2 style="color: #dc3545; margin-bottom: 20px;">⚠️ OVERDUE MAINTENANCE ALERT</h2>
             
             <div style="background-color: white; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545;">
-              <h3 style="color: #dc3545; margin-top: 0;">Equipment Details</h3>
+              <h3 style="color: #dc3545; margin-top: 0;">Equipment Requires Immediate Attention</h3>
+              
+              <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="color: #721c24; margin: 0; font-weight: bold;">
+                  This equipment is overdue for maintenance and may pose safety or operational risks.
+                </p>
+              </div>
               
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -110,40 +153,45 @@ const getEmailTemplate = (alertType: string, equipment: Equipment, customMessage
                   <td style="padding: 8px 0;">${equipment.location}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Maintenance Due Date:</td>
+                  <td style="padding: 8px 0; font-weight: bold;">Due Date:</td>
                   <td style="padding: 8px 0; color: #dc3545; font-weight: bold;">${equipment.next_maintenance} (OVERDUE)</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Operating Hours:</td>
-                  <td style="padding: 8px 0;">${equipment.hours_operated}</td>
+                  <td style="padding: 8px 0; font-weight: bold;">Current Status:</td>
+                  <td style="padding: 8px 0;">${equipment.status}</td>
                 </tr>
               </table>
-              
-              <div style="margin-top: 20px; padding: 15px; background-color: #fff5f5; border-radius: 4px; border: 1px solid #dc3545;">
-                <p style="margin: 0; color: #dc3545; font-weight: bold;">
-                  ⚠️ IMMEDIATE ACTION REQUIRED: This equipment has overdue maintenance and should be taken out of service until maintenance is completed.
-                </p>
-              </div>
-              
-              ${customMessage ? `<div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;"><strong>Additional Message:</strong><br>${customMessage}</div>` : ''}
             </div>
             
+            ${customMessage ? `
+              <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ffc107;">
+                <h4 style="color: #856404; margin-top: 0;">Additional Message:</h4>
+                <p style="color: #856404; margin-bottom: 0;">${customMessage}</p>
+              </div>
+            ` : ''}
+            
             <div style="margin-top: 20px; text-align: center; color: #666; font-size: 12px;">
-              <p>This is an automated notification from Machinery Management System</p>
+              <p>This is an automated urgent notification from your Machinery Management System</p>
             </div>
           </div>
         </div>
       `
     },
     critical: {
-      subject: `🔴 CRITICAL ALERT: ${equipment.name} - Immediate Action Required`,
+      subject: `🔴 CRITICAL Alert - ${equipment.name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #fff0f0; padding: 20px; border-radius: 8px; border: 3px solid #dc3545;">
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
             <h2 style="color: #dc3545; margin-bottom: 20px;">🔴 CRITICAL EQUIPMENT ALERT</h2>
             
             <div style="background-color: white; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545;">
-              <h3 style="color: #dc3545; margin-top: 0;">Critical Equipment Status</h3>
+              <h3 style="color: #dc3545; margin-top: 0;">IMMEDIATE ACTION REQUIRED</h3>
+              
+              <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="color: #721c24; margin: 0; font-weight: bold;">
+                  🚨 CRITICAL STATUS: This equipment requires immediate inspection and maintenance.
+                </p>
+              </div>
               
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -164,30 +212,20 @@ const getEmailTemplate = (alertType: string, equipment: Equipment, customMessage
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold;">Status:</td>
-                  <td style="padding: 8px 0; color: #dc3545; font-weight: bold;">CRITICAL</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Last Maintenance:</td>
-                  <td style="padding: 8px 0;">${equipment.last_maintenance}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Operating Hours:</td>
-                  <td style="padding: 8px 0;">${equipment.hours_operated}</td>
+                  <td style="padding: 8px 0; color: #dc3545; font-weight: bold; text-transform: uppercase;">${equipment.status}</td>
                 </tr>
               </table>
-              
-              <div style="margin-top: 20px; padding: 15px; background-color: #fff0f0; border-radius: 4px; border: 2px solid #dc3545;">
-                <p style="margin: 0; color: #dc3545; font-weight: bold; font-size: 16px;">
-                  🛑 STOP OPERATION IMMEDIATELY<br>
-                  Equipment has been marked as CRITICAL. Contact maintenance team for urgent inspection.
-                </p>
-              </div>
-              
-              ${customMessage ? `<div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;"><strong>Additional Message:</strong><br>${customMessage}</div>` : ''}
             </div>
             
+            ${customMessage ? `
+              <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ffc107;">
+                <h4 style="color: #856404; margin-top: 0;">Additional Message:</h4>
+                <p style="color: #856404; margin-bottom: 0;">${customMessage}</p>
+              </div>
+            ` : ''}
+            
             <div style="margin-top: 20px; text-align: center; color: #666; font-size: 12px;">
-              <p>This is an automated critical alert from Machinery Management System</p>
+              <p>This is an automated critical alert from your Machinery Management System</p>
             </div>
           </div>
         </div>
@@ -224,55 +262,60 @@ const handler = async (req: Request): Promise<Response> => {
 
     const template = getEmailTemplate(alertType, equipment, customMessage);
 
-    // Send emails to all recipients
-    const emailPromises = recipients.map(async (email) => {
-      try {
-        const emailResponse = await resend.emails.send({
-          from: "Machinery Management <alerts@yourdomain.com>",
-          to: [email],
-          subject: template.subject,
-          html: template.html,
-        });
-
-        // Log email sent
-        await supabaseClient
-          .from('maintenance_notifications')
-          .insert({
-            asset_id: equipmentId,
-            notification_type: alertType,
-            recipient_email: email,
-            sent_at: new Date().toISOString(),
-            status: 'sent'
-          });
-
-        return { email, success: true, id: emailResponse.data?.id };
-      } catch (error) {
-        console.error(`Failed to send email to ${email}:`, error);
-        
-        // Log email failed
-        await supabaseClient
-          .from('maintenance_notifications')
-          .insert({
-            asset_id: equipmentId,
-            notification_type: alertType,
-            recipient_email: email,
-            sent_at: new Date().toISOString(),
-            status: 'failed',
-            error_message: error.message
-          });
-
-        return { email, success: false, error: error.message };
+    // Send emails with rate limiting and retry logic
+    const emailResults = [];
+    
+    for (let i = 0; i < recipients.length; i++) {
+      const recipient = recipients[i];
+      console.log(`Sending email ${i + 1}/${recipients.length} to ${recipient}`);
+      
+      // Add delay between emails to avoid hitting rate limits
+      if (i > 0) {
+        await delay(500); // 500ms delay between emails
       }
-    });
 
-    const results = await Promise.all(emailPromises);
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
+      const emailResult = await sendEmailWithRetry({
+        from: "Machinery Alerts <alerts@resend.dev>",
+        to: [recipient],
+        subject: template.subject,
+        html: template.html,
+      });
+
+      // Log email attempt
+      try {
+        await supabaseClient
+          .from('maintenance_notifications')
+          .insert({
+            asset_id: equipmentId,
+            notification_type: alertType,
+            recipient_email: recipient,
+            email_status: emailResult.success ? 'sent' : 'failed',
+            error_message: emailResult.error || null,
+            sent_at: new Date().toISOString(),
+            created_at: new Date().toISOString()
+          });
+      } catch (logError) {
+        console.error('Failed to log email attempt:', logError);
+      }
+
+      emailResults.push({
+        recipient,
+        success: emailResult.success,
+        messageId: emailResult.data?.id,
+        error: emailResult.error
+      });
+
+      console.log(`Email to ${recipient}: ${emailResult.success ? 'SUCCESS' : 'FAILED'} ${emailResult.error ? `(${emailResult.error})` : ''}`);
+    }
+
+    const successful = emailResults.filter(r => r.success).length;
+    const failed = emailResults.filter(r => !r.success).length;
 
     return new Response(JSON.stringify({
       message: `Sent ${successful} emails successfully, ${failed} failed`,
-      results,
-      equipmentName: equipment.name
+      results: emailResults,
+      equipmentName: equipment.name,
+      alertType
     }), {
       status: 200,
       headers: {

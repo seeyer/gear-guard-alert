@@ -16,6 +16,42 @@ interface BulkAlertRequest {
   recipients: string[];
 }
 
+// Email rate limiter with exponential backoff
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const sendEmailWithRetry = async (
+  emailData: any, 
+  maxRetries = 3, 
+  baseDelay = 1000
+): Promise<{ success: boolean; data?: any; error?: string }> => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await resend.emails.send(emailData);
+      return { success: true, data: response.data };
+    } catch (error: any) {
+      console.error(`Bulk email attempt ${attempt + 1} failed:`, error.message);
+      
+      // Check if it's a rate limit or threshold error
+      const isRateLimit = error.message?.toLowerCase().includes('rate limit') || 
+                         error.message?.toLowerCase().includes('threshold') ||
+                         error.message?.toLowerCase().includes('quota') ||
+                         error.status === 429;
+      
+      if (isRateLimit && attempt < maxRetries - 1) {
+        const delayTime = baseDelay * Math.pow(2, attempt); // Exponential backoff
+        console.log(`Rate limit hit for bulk email, waiting ${delayTime}ms before retry ${attempt + 1}...`);
+        await delay(delayTime);
+        continue;
+      }
+      
+      // If it's the last attempt or not a rate limit error, return the error
+      return { success: false, error: error.message };
+    }
+  }
+  
+  return { success: false, error: "Max retries exceeded" };
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -36,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
     let query = supabaseClient
       .from('assets')
       .select('*')
-      .lte('next_maintenance', thresholdDate.toISOString().split('T')[0]);
+      .lte('next_maintenance_date', thresholdDate.toISOString().split('T')[0]);
 
     if (criticalOnly) {
       query = query.eq('status', 'critical');
@@ -61,9 +97,9 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Generate summary email
+    // Generate summary email with improved formatting
     const equipmentList = dueEquipment.map(eq => {
-      const dueDate = new Date(eq.next_maintenance);
+      const dueDate = new Date(eq.next_maintenance_date);
       const today = new Date();
       const isOverdue = dueDate < today;
       const daysDiff = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -88,25 +124,25 @@ const handler = async (req: Request): Promise<Response> => {
     const summaryHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
         <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
-          <h2 style="color: #333; margin-bottom: 20px;">Maintenance Alert Summary</h2>
+          <h2 style="color: #333; margin-bottom: 20px;">📋 Maintenance Alert Summary</h2>
           
-          <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+          <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
             ${overdueCount > 0 ? `
-              <div style="background-color: #fff5f5; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545; flex: 1;">
+              <div style="background-color: #fff5f5; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545; flex: 1; min-width: 200px;">
                 <h3 style="color: #dc3545; margin: 0; font-size: 16px;">🚨 Overdue</h3>
                 <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #dc3545;">${overdueCount}</p>
               </div>
             ` : ''}
             
             ${urgentCount > 0 ? `
-              <div style="background-color: #fff8e1; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800; flex: 1;">
+              <div style="background-color: #fff8e1; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800; flex: 1; min-width: 200px;">
                 <h3 style="color: #ff9800; margin: 0; font-size: 16px;">⚠️ Urgent (≤2 days)</h3>
                 <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #ff9800;">${urgentCount}</p>
               </div>
             ` : ''}
             
             ${dueCount > 0 ? `
-              <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; border-left: 4px solid #6b7280; flex: 1;">
+              <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; border-left: 4px solid #6b7280; flex: 1; min-width: 200px;">
                 <h3 style="color: #6b7280; margin: 0; font-size: 16px;">📅 Due Soon</h3>
                 <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #6b7280;">${dueCount}</p>
               </div>
@@ -131,11 +167,11 @@ const handler = async (req: Request): Promise<Response> => {
                   <tr>
                     <td style="padding: 12px; border: 1px solid #dee2e6;">
                       <strong>${eq.name}</strong><br>
-                      <small style="color: #666;">${eq.model}</small>
+                      <small style="color: #666;">${eq.category || 'N/A'}</small>
                     </td>
-                    <td style="padding: 12px; border: 1px solid #dee2e6;">${eq.location}</td>
+                    <td style="padding: 12px; border: 1px solid #dee2e6;">${eq.location || 'N/A'}</td>
                     <td style="padding: 12px; border: 1px solid #dee2e6;">
-                      ${eq.next_maintenance}
+                      ${eq.next_maintenance_date}
                       ${eq.isOverdue ? '<br><small style="color: #dc3545; font-weight: bold;">OVERDUE</small>' : 
                         eq.daysDiff <= 2 ? '<br><small style="color: #ff9800; font-weight: bold;">URGENT</small>' : 
                         `<br><small style="color: #666;">In ${eq.daysDiff} days</small>`}
@@ -145,7 +181,7 @@ const handler = async (req: Request): Promise<Response> => {
                         ${eq.status === 'critical' ? 'background-color: #fff5f5; color: #dc3545;' : 
                           eq.status === 'maintenance' ? 'background-color: #fff8e1; color: #ff9800;' : 
                           'background-color: #f0f9ff; color: #0369a1;'}">
-                        ${eq.status.toUpperCase()}
+                        ${eq.status?.toUpperCase() || 'N/A'}
                       </span>
                     </td>
                     <td style="padding: 12px; border: 1px solid #dee2e6;">
@@ -170,53 +206,53 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Send summary email to all recipients
-    const emailPromises = recipients.map(async (email) => {
-      try {
-        const emailResponse = await resend.emails.send({
-          from: "Machinery Management <alerts@yourdomain.com>",
-          to: [email],
-          subject: `Maintenance Summary: ${equipmentList.length} Equipment Items Require Attention`,
-          html: summaryHtml,
-        });
-
-        // Log bulk email sent
-        await supabaseClient
-          .from('maintenance_notifications')
-          .insert({
-            notification_type: 'bulk_summary',
-            recipient_email: email,
-            sent_at: new Date().toISOString(),
-            status: 'sent',
-            metadata: {
-              equipmentCount: equipmentList.length,
-              overdueCount,
-              urgentCount,
-              dueCount
-            }
-          });
-
-        return { email, success: true, id: emailResponse.data?.id };
-      } catch (error) {
-        console.error(`Failed to send summary email to ${email}:`, error);
-        
-        await supabaseClient
-          .from('maintenance_notifications')
-          .insert({
-            notification_type: 'bulk_summary',
-            recipient_email: email,
-            sent_at: new Date().toISOString(),
-            status: 'failed',
-            error_message: error.message
-          });
-
-        return { email, success: false, error: error.message };
+    // Send summary email to all recipients with rate limiting
+    const emailResults = [];
+    
+    for (let i = 0; i < recipients.length; i++) {
+      const recipient = recipients[i];
+      console.log(`Sending bulk email ${i + 1}/${recipients.length} to ${recipient}`);
+      
+      // Add staggered delay to avoid hitting rate limits
+      if (i > 0) {
+        await delay(750); // 750ms delay between bulk emails
       }
-    });
 
-    const results = await Promise.all(emailPromises);
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
+      const emailResult = await sendEmailWithRetry({
+        from: "Machinery Management <alerts@resend.dev>",
+        to: [recipient],
+        subject: `📋 Maintenance Summary: ${equipmentList.length} Equipment Items Require Attention`,
+        html: summaryHtml,
+      });
+
+      // Log bulk email attempt
+      try {
+        await supabaseClient
+          .from('maintenance_notifications')
+          .insert({
+            notification_type: 'bulk_summary',
+            recipient_email: recipient,
+            email_status: emailResult.success ? 'sent' : 'failed',
+            error_message: emailResult.error || null,
+            sent_at: new Date().toISOString(),
+            created_at: new Date().toISOString()
+          });
+      } catch (logError) {
+        console.error('Failed to log bulk email attempt:', logError);
+      }
+
+      emailResults.push({
+        recipient,
+        success: emailResult.success,
+        messageId: emailResult.data?.id,
+        error: emailResult.error
+      });
+
+      console.log(`Bulk email to ${recipient}: ${emailResult.success ? 'SUCCESS' : 'FAILED'} ${emailResult.error ? `(${emailResult.error})` : ''}`);
+    }
+
+    const successful = emailResults.filter(r => r.success).length;
+    const failed = emailResults.filter(r => !r.success).length;
 
     return new Response(JSON.stringify({
       message: `Bulk maintenance summary sent to ${successful} recipients, ${failed} failed`,
@@ -226,7 +262,7 @@ const handler = async (req: Request): Promise<Response> => {
         urgent: urgentCount,
         due: dueCount
       },
-      results
+      results: emailResults
     }), {
       status: 200,
       headers: {
