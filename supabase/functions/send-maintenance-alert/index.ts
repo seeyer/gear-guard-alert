@@ -29,42 +29,6 @@ interface Equipment {
   status: string;
 }
 
-// Email rate limiter with exponential backoff
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-const sendEmailWithRetry = async (
-  emailData: any, 
-  maxRetries = 3, 
-  baseDelay = 1000
-): Promise<{ success: boolean; data?: any; error?: string }> => {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await resend.emails.send(emailData);
-      return { success: true, data: response.data };
-    } catch (error: any) {
-      console.error(`Email attempt ${attempt + 1} failed:`, error.message);
-      
-      // Check if it's a rate limit or threshold error
-      const isRateLimit = error.message?.toLowerCase().includes('rate limit') || 
-                         error.message?.toLowerCase().includes('threshold') ||
-                         error.message?.toLowerCase().includes('quota') ||
-                         error.status === 429;
-      
-      if (isRateLimit && attempt < maxRetries - 1) {
-        const delayTime = baseDelay * Math.pow(2, attempt); // Exponential backoff
-        console.log(`Rate limit hit, waiting ${delayTime}ms before retry ${attempt + 1}...`);
-        await delay(delayTime);
-        continue;
-      }
-      
-      // If it's the last attempt or not a rate limit error, return the error
-      return { success: false, error: error.message };
-    }
-  }
-  
-  return { success: false, error: "Max retries exceeded" };
-};
-
 const getEmailTemplate = (alertType: string, equipment: Equipment, customMessage?: string) => {
   const templates = {
     maintenance_due: {
@@ -262,58 +226,58 @@ const handler = async (req: Request): Promise<Response> => {
 
     const template = getEmailTemplate(alertType, equipment, customMessage);
 
-    // Send emails with rate limiting and retry logic
-    const emailResults = [];
-    
-    for (let i = 0; i < recipients.length; i++) {
-      const recipient = recipients[i];
-      console.log(`Sending email ${i + 1}/${recipients.length} to ${recipient}`);
-      
-      // Add delay between emails to avoid hitting rate limits
-      if (i > 0) {
-        await delay(500); // 500ms delay between emails
-      }
-
-      const emailResult = await sendEmailWithRetry({
-        from: "Machinery Alerts <alerts@resend.dev>",
-        to: [recipient],
-        subject: template.subject,
-        html: template.html,
-      });
-
-      // Log email attempt
+    // Send emails to all recipients
+    const emailPromises = recipients.map(async (recipient) => {
       try {
+        const emailResponse = await resend.emails.send({
+          from: "Machinery Alerts <alerts@resend.dev>",
+          to: [recipient],
+          subject: template.subject,
+          html: template.html,
+        });
+
+        console.log(`Email sent successfully to ${recipient}:`, emailResponse);
+
+        // Log email success
         await supabaseClient
           .from('maintenance_notifications')
           .insert({
             asset_id: equipmentId,
             notification_type: alertType,
             recipient_email: recipient,
-            email_status: emailResult.success ? 'sent' : 'failed',
-            error_message: emailResult.error || null,
+            email_status: 'sent',
             sent_at: new Date().toISOString(),
             created_at: new Date().toISOString()
           });
-      } catch (logError) {
-        console.error('Failed to log email attempt:', logError);
+
+        return { recipient, success: true, messageId: emailResponse.data?.id };
+      } catch (error: any) {
+        console.error(`Failed to send email to ${recipient}:`, error);
+        
+        // Log email failure
+        await supabaseClient
+          .from('maintenance_notifications')
+          .insert({
+            asset_id: equipmentId,
+            notification_type: alertType,
+            recipient_email: recipient,
+            email_status: 'failed',
+            error_message: error.message,
+            sent_at: new Date().toISOString(),
+            created_at: new Date().toISOString()
+          });
+
+        return { recipient, success: false, error: error.message };
       }
+    });
 
-      emailResults.push({
-        recipient,
-        success: emailResult.success,
-        messageId: emailResult.data?.id,
-        error: emailResult.error
-      });
-
-      console.log(`Email to ${recipient}: ${emailResult.success ? 'SUCCESS' : 'FAILED'} ${emailResult.error ? `(${emailResult.error})` : ''}`);
-    }
-
-    const successful = emailResults.filter(r => r.success).length;
-    const failed = emailResults.filter(r => !r.success).length;
+    const results = await Promise.all(emailPromises);
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
 
     return new Response(JSON.stringify({
       message: `Sent ${successful} emails successfully, ${failed} failed`,
-      results: emailResults,
+      results,
       equipmentName: equipment.name,
       alertType
     }), {
