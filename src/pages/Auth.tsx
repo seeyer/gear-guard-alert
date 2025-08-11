@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Wrench } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Wrench } from 'lucide-react';
 
 export const Auth = () => {
   const [email, setEmail] = useState('');
