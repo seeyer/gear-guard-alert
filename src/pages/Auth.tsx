@@ -69,8 +69,8 @@ export const Auth = () => {
     
     if (!error) {
       toast({
-        title: "Account Created",
-        description: "Please check your email to verify your account",
+        title: "Account Created Successfully",
+        description: "You are now logged in and can start using the system",
       });
     } else {
       toast({

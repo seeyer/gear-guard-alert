@@ -77,17 +77,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string, role: 'user' | 'admin' | 'manager') => {
     setIsLoading(true);
-    const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
           role: role
-        }
+        },
+        emailRedirectTo: undefined // Disable email verification
       }
     });
     setIsLoading(false);
