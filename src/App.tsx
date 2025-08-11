@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { Login } from "@/components/Login";
+import { Auth } from "@/pages/Auth";
 import { Navbar } from "@/components/Navbar";
 import Index from "@/pages/Index";
 import { UserDashboard } from "@/pages/UserDashboard";
@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
-    return <Login />;
+    return <Auth />;
   }
 
   return <>{children}</>;
@@ -56,8 +56,8 @@ const AppContent = () => {
   return (
     <Router>
       <Routes>
-        {/* Public route for login */}
-        <Route path="/login" element={<Login />} />
+        {/* Public route for auth */}
+        <Route path="/auth" element={<Auth />} />
         
         {/* Protected routes */}
         <Route path="/" element={
