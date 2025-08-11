@@ -6,14 +6,14 @@ interface AuthUser {
   id: string;
   email: string;
   name: string;
-  role: 'user' | 'admin' | 'superadmin';
+  role: 'user' | 'admin' | 'manager';
 }
 
 interface AuthContextType {
   user: AuthUser | null;
   session: Session | null;
   login: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, role: 'user' | 'admin' | 'manager') => Promise<{ error: any }>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role: 'user' | 'admin' | 'manager') => {
     setIsLoading(true);
     const redirectUrl = `${window.location.origin}/`;
     
@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
-          role: 'user'
+          role: role
         }
       }
     });

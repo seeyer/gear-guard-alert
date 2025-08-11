@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   
-  if (user?.role !== 'admin' && user?.role !== 'superadmin') {
+  if (user?.role !== 'admin' && user?.role !== 'manager') {
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -45,7 +45,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   
-  if (user?.role !== 'superadmin') {
+  if (user?.role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
   }
   
